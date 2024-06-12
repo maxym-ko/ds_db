@@ -1,5 +1,8 @@
+import sys
+sys.path.append('../')
+
+from generate_fake_data import generate_fake_data
 from neo4j import GraphDatabase
-from faker import Faker
 
 NEO4J_URI = "bolt://localhost:7687"
 NEO4J_USER = "neo4j"
@@ -14,22 +17,18 @@ class Neo4jClient:
     def close(self):
         self.driver.close()
 
-    def create_data(self):
-        faker = Faker()
-        hobbies_list = [faker.word() for _ in range(20)]
+    def create_data(self, data):
+        with self.driver.session() as session:
+            for user_data in data:
+                session.write_transaction(self.create_user,
+                                          user_data['login'],
+                                          user_data['password'],
+                                          user_data['resume']['resume_title'],
+                                          user_data['resume']['hobbies'],
+                                          user_data['resume']['previous_jobs'])
 
         with self.driver.session() as session:
-            for _ in range(100):
-                user_login = faker.user_name()
-                user_password = faker.password()
-                resume_title = faker.job()
-                hobbies = faker.random_choices(elements=hobbies_list, length=5)
-                previous_jobs = [
-                    {"city": faker.city(), "institution_name": faker.company()}
-                    for _ in range(4)
-                ]
-
-                session.write_transaction(self.create_user, user_login, user_password, resume_title, hobbies, previous_jobs)
+            session.read_transaction(self.print_users)
 
     @staticmethod
     def create_user(tx, login, password, resume_title, hobbies, previous_jobs):
@@ -60,8 +59,21 @@ class Neo4jClient:
             """
             tx.run(create_job_query, city=job['city'], institution_name=job['institution_name'], login=login)
 
+    @staticmethod
+    def print_users(tx):
+        query = """
+        MATCH (u:User)-[:HAS_RESUME]->(r:Resume)
+        RETURN u
+        """
+        result = tx.run(query)
+        for record in result:
+            print(f"ID: {record['u']['login']}, Login: {record['u']['login']}, Password: {record['u']['password']}")
+
 
 if __name__ == "__main__":
     client = Neo4jClient(NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD)
-    client.create_data()
+
+    fake_data = generate_fake_data()
+    client.create_data(fake_data)
+
     client.close()

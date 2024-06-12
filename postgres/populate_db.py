@@ -1,7 +1,10 @@
+import sys
+sys.path.append('../')
+
+from generate_fake_data import generate_fake_data
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from models import User, Resume, Hobby, PreviousJob, Base
-from faker import Faker
 
 DATABASE_URL = "postgresql://user:postgres@localhost/hr_system"
 
@@ -9,36 +12,39 @@ engine = create_engine(DATABASE_URL)
 Session = sessionmaker(bind=engine)
 session = Session()
 
-faker = Faker()
+fake_data = generate_fake_data()
 
-hobbies = [Hobby(name=faker.word()) for _ in range(20)]
-session.add_all(hobbies)
+hobbies_dict = {}
+
+for hobby in {hobby for user in fake_data for hobby in user["resume"]["hobbies"]}:
+    hobby_obj = Hobby(name=hobby)
+    session.add(hobby_obj)
+    hobbies_dict[hobby] = hobby_obj
 session.commit()
 
-users = []
-for _ in range(100):
+for user_data in fake_data:
     user = User(
-        login=faker.user_name(),
-        password=faker.password()
+        login=user_data["login"],
+        password=user_data["password"]
     )
     session.add(user)
     session.commit()
 
     resume = Resume(
         user_id=user.id,
-        resume_title=faker.job()
+        resume_title=user_data["resume"]["resume_title"]
     )
     user.resume = resume
     session.add(resume)
 
-    for hobby in faker.random_choices(elements=hobbies, length=5):
-        resume.hobbies.append(hobby)
+    for hobby in user_data["resume"]["hobbies"]:
+        resume.hobbies.append(hobbies_dict[hobby])
 
-    for _ in range(4):
+    for job in user_data["resume"]["previous_jobs"]:
         previous_job = PreviousJob(
             resume_id=resume.id,
-            city=faker.city(),
-            institution_name=faker.company()
+            city=job["city"],
+            institution_name=job["institution_name"]
         )
         resume.previous_jobs.append(previous_job)
 
