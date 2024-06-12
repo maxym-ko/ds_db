@@ -25,6 +25,11 @@ pip install -r requirements.txt
 python populate_db.py
 ```
 
+### Run some queries
+```shell
+python example.py
+```
+
 ### Delete DB
 ```shell
 mongosh hr_system --eval "db.dropDatabase()"

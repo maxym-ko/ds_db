@@ -18,3 +18,8 @@ python clean_db.py
 pip install -r requirements.txt
 python populate_db.py
 ```
+
+### Run some queries
+```shell
+python example.py
+```

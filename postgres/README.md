@@ -28,6 +28,11 @@ python clean_db.py
 python populate_db.py
 ```
 
+### Run some queries
+```shell
+python example.py
+```
+
 ### Delete DB
 ```shell
 dropdb hr_system
