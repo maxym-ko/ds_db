@@ -23,3 +23,8 @@ python populate_db.py
 ```shell
 python example.py
 ```
+
+### Cleaning up
+```shell
+brew services stop neo4j
+```

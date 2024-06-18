@@ -30,7 +30,8 @@ python populate_db.py
 python example.py
 ```
 
-### Delete DB
+### Cleaning up
 ```shell
+brew services stop mongodb-community
 mongosh hr_system --eval "db.dropDatabase()"
 ```

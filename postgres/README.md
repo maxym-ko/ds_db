@@ -33,7 +33,8 @@ python populate_db.py
 python example.py
 ```
 
-### Delete DB
+### Cleaning up
 ```shell
 dropdb hr_system
+brew services stop postgresql
 ```
